@@ -1,23 +1,24 @@
-import { NextResponse } from 'next/server';
-import { Post } from '@/lib/types';
-import { getPosts, createPost } from '@/lib/data';
-// import connectDB from '@/lib/mongodb'; // Uncomment when MongoDB is connected
+import { NextResponse, NextRequest } from 'next/server';
+import connectDB, { Post, User } from '@/lib/mongodb';
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
+    await connectDB();
+
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
 
-    // TODO: Uncomment when MongoDB connection is provided
-    // await connectDB();
-
-    const posts = await getPosts();
-    
-    // Filter by userId if provided
     if (userId) {
-      const filteredPosts = posts.filter(p => p.userId === parseInt(userId));
-      return NextResponse.json(filteredPosts);
+      const posts = await Post.find({ userId })
+        .sort({ createdAt: -1 })
+        .limit(50);
+      return NextResponse.json(posts);
     }
+
+    // Get all posts for feed
+    const posts = await Post.find()
+      .sort({ createdAt: -1 })
+      .limit(100);
 
     return NextResponse.json(posts);
   } catch (error) {
@@ -26,8 +27,10 @@ export async function GET(request: Request) {
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
+    await connectDB();
+
     const body = await request.json();
     
     // Validation
@@ -36,39 +39,99 @@ export async function POST(request: Request) {
     }
 
     if (body.text.length > 1000) {
-      return NextResponse.json({ error: 'Post text too long' }, { status: 400 });
+      return NextResponse.json({ error: 'Post text too long (max 1000 characters)' }, { status: 400 });
     }
 
-    // TODO: Uncomment when MongoDB connection is provided
-    // await connectDB();
+    // Get user info for the post
+    const user = await User.findById(body.userId);
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
 
-    const newPost: Post = {
+    const newPost = await Post.create({
       userId: body.userId,
+      userName: user.name,
+      userCharacter: user.character,
       text: body.text,
       likes: 0,
-    };
+      likedBy: [],
+      createdAt: new Date()
+    });
 
-    const createdPost = await createPost(newPost);
-
-    return NextResponse.json(createdPost, { status: 201 });
+    return NextResponse.json(newPost, { status: 201 });
   } catch (error) {
     console.error('Error creating post:', error);
     return NextResponse.json({ error: 'Failed to create post' }, { status: 500 });
   }
 }
 
-// TODO: Implement like/unlike functionality
-/*
-export async function PATCH(request: Request) {
-  // Update post likes
-  const body = await request.json();
-  const { postId, action } = body; // action: 'like' | 'unlike'
-  
-  // TODO: Implement in MongoDB
-}
-*/
+// Like/unlike post
+export async function PATCH(request: NextRequest) {
+  try {
+    await connectDB();
 
-// TODO: Implement delete post
+    const body = await request.json();
+    const { postId, userId, action } = body; // action: 'like' | 'unlike'
+    
+    if (!postId || !userId || !action) {
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+
+    const post = await Post.findById(postId);
+    if (!post) {
+      return NextResponse.json({ error: 'Post not found' }, { status: 404 });
+    }
+
+    if (action === 'like') {
+      if (!post.likedBy.includes(userId)) {
+        post.likedBy.push(userId);
+        post.likes = post.likedBy.length;
+      }
+    } else if (action === 'unlike') {
+      post.likedBy = post.likedBy.filter((id: string) => id !== userId);
+      post.likes = post.likedBy.length;
+    }
+
+    await post.save();
+
+    return NextResponse.json(post);
+  } catch (error) {
+    console.error('Error updating post:', error);
+    return NextResponse.json({ error: 'Failed to update post' }, { status: 500 });
+  }
+}
+
+// Delete post
+export async function DELETE(request: NextRequest) {
+  try {
+    await connectDB();
+
+    const { searchParams } = new URL(request.url);
+    const postId = searchParams.get('postId');
+    const userId = searchParams.get('userId');
+
+    if (!postId || !userId) {
+      return NextResponse.json({ error: 'Missing postId or userId' }, { status: 400 });
+    }
+
+    const post = await Post.findById(postId);
+    if (!post) {
+      return NextResponse.json({ error: 'Post not found' }, { status: 404 });
+    }
+
+    // Check if user owns the post
+    if (post.userId !== userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    }
+
+    await Post.findByIdAndDelete(postId);
+
+    return NextResponse.json({ message: 'Post deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting post:', error);
+    return NextResponse.json({ error: 'Failed to delete post' }, { status: 500 });
+  }
+}
 /*
 export async function DELETE(request: Request) {
   // Delete a post
