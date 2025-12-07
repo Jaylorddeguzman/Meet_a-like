@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { UserProvider } from '@/contexts/UserContext';
 import AuthProvider from '@/components/AuthProvider';
+import KeepAlive from '@/components/KeepAlive';
 import './globals.css';
 
 // Initialize self-ping service to prevent Render.com from sleeping
@@ -32,6 +33,7 @@ export default function RootLayout({
       <body>
         <AuthProvider>
           <UserProvider>
+            <KeepAlive />
             {children}
           </UserProvider>
         </AuthProvider>

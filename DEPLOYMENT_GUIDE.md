@@ -52,29 +52,48 @@ After deployment, get your Render URL (e.g., `https://charactermatch.onrender.co
 
 1. Go to [Google Cloud Console - Credentials](https://console.cloud.google.com/apis/credentials)
 2. Click on your OAuth 2.0 Client ID
-3. Under **Authorized JavaScript origins**, add:
+
+3. **Under "Authorized JavaScript origins"** (no paths, just the domain):
    ```
-   https://charactermatch.onrender.com
-   ```
-   Keep existing:
-   ```
-   http://localhost:3000
+   https://meet-a-like.onrender.com
    http://localhost:3001
    ```
+   **Important:** NO `/api/auth/callback/google` here! Just the domain.
 
-4. Under **Authorized redirect URIs**, add:
+4. **Under "Authorized redirect URIs"** (full callback URL with path):
    ```
-   https://charactermatch.onrender.com/api/auth/callback/google
-   ```
-   Keep existing:
-   ```
-   http://localhost:3000/api/auth/callback/google
+   https://meet-a-like.onrender.com/api/auth/callback/google
    http://localhost:3001/api/auth/callback/google
    ```
+   **Important:** This MUST include the full path `/api/auth/callback/google`
 
 5. Click **Save**
 
-### 5. Deploy and Test
+### 5. Keep-Alive Configuration (Prevent Sleeping)
+
+The app includes an automatic keep-alive system to prevent Render's free tier from sleeping:
+
+**Client-Side Keep-Alive (Automatic):**
+- Built-in component pings `/api/health` every 5 minutes
+- Works automatically when users browse the app
+- No additional configuration needed
+
+**Server-Side Keep-Alive (Optional):**
+If you want 24/7 uptime on free tier, use an external cron service:
+
+1. Sign up for a free cron service:
+   - [Cron-job.org](https://cron-job.org) (recommended)
+   - [UptimeRobot](https://uptimerobot.com)
+   - [Easycron](https://www.easycron.com)
+
+2. Create a new cron job:
+   - **URL:** `https://meet-a-like.onrender.com/api/health`
+   - **Interval:** Every 10 minutes
+   - **Method:** GET
+
+This will ping your app regularly to keep it awake!
+
+### 6. Deploy and Test
 
 1. Click **"Create Web Service"** on Render
 2. Wait for deployment (5-10 minutes)
