@@ -3,6 +3,13 @@ import { UserProvider } from '@/contexts/UserContext';
 import AuthProvider from '@/components/AuthProvider';
 import './globals.css';
 
+// Initialize self-ping service to prevent Render.com from sleeping
+if (typeof window === 'undefined' && process.env.NODE_ENV === 'production') {
+  import('@/lib/self-ping').then(({ initializeSelfPing }) => {
+    initializeSelfPing();
+  });
+}
+
 export const metadata: Metadata = {
   title: 'CharacterMatch - Find Your Perfect Match',
   description: 'A unique dating app where you connect through character avatars',
