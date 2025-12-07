@@ -69,29 +69,26 @@ After deployment, get your Render URL (e.g., `https://charactermatch.onrender.co
 
 5. Click **Save**
 
-### 5. Keep-Alive Configuration (Prevent Sleeping)
+### 5. Keep-Alive Configuration (Automatic - No External Service Needed!)
 
-The app includes an automatic keep-alive system to prevent Render's free tier from sleeping:
+The app includes a **built-in self-ping system** that runs on the server to prevent Render's free tier from sleeping:
 
-**Client-Side Keep-Alive (Automatic):**
-- Built-in component pings `/api/health` every 5 minutes
-- Works automatically when users browse the app
-- No additional configuration needed
+**How It Works:**
+- ✅ Server pings itself every 10 minutes automatically
+- ✅ Client-side component also pings when users browse
+- ✅ No external cron services needed
+- ✅ Completely self-contained
 
-**Server-Side Keep-Alive (Optional):**
-If you want 24/7 uptime on free tier, use an external cron service:
+**What This Means:**
+- Your app will stay awake as long as the server is running
+- The server pings `/api/health` internally every 10 minutes
+- Combined with client pings, provides excellent uptime
+- **No configuration needed** - works automatically in production!
 
-1. Sign up for a free cron service:
-   - [Cron-job.org](https://cron-job.org) (recommended)
-   - [UptimeRobot](https://uptimerobot.com)
-   - [Easycron](https://www.easycron.com)
-
-2. Create a new cron job:
-   - **URL:** `https://meet-a-like.onrender.com/api/health`
-   - **Interval:** Every 10 minutes
-   - **Method:** GET
-
-This will ping your app regularly to keep it awake!
+**Note on Render Free Tier:**
+- Render may still spin down after extended inactivity
+- Self-ping significantly reduces sleep time
+- For 100% uptime, consider upgrading to Render's paid tier ($7/month)
 
 ### 6. Deploy and Test
 

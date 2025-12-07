@@ -2,6 +2,9 @@
 const nextConfig = {
   output: 'standalone',
   reactStrictMode: true,
+  experimental: {
+    instrumentationHook: true, // Enable instrumentation for self-ping
+  },
   images: {
     domains: [],
     unoptimized: false,
