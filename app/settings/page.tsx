@@ -62,14 +62,11 @@ const SettingsPage: React.FC = () => {
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/');
-    }
-  }, [status, router]);
-
-  useEffect(() => {
-    if (session?.user) {
+    } else if (status === 'authenticated') {
       fetchUserSettings();
     }
-  }, [session]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status]); // Only run when auth status changes, not on every session object change
 
   const fetchUserSettings = async () => {
     try {

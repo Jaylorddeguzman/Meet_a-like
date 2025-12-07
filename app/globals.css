@@ -22,10 +22,10 @@ body {
   background: linear-gradient(to bottom right, #fce7f3, #f3e8ff, #dbeafe);
 }
 
-/* Smooth transitions */
-* {
-  transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform;
-  transition-duration: 200ms;
+/* Optimized transitions - only apply where needed, not globally */
+button, a, [role="button"] {
+  transition-property: background-color, border-color, color, opacity, transform;
+  transition-duration: 150ms;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 

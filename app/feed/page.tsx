@@ -7,61 +7,98 @@ import CharacterAvatar from '@/components/CharacterAvatar';
 import BottomNav from '@/components/BottomNav';
 import PostCard from '@/components/PostCard';
 import NotificationBell from '@/components/NotificationBell';
+import LoadingSpinner from '@/components/LoadingSpinner';
 import { sampleUsers } from '@/lib/data';
 import { Post } from '@/lib/types';
 import { assignCharacter } from '@/lib/utils';
 
 export default function FeedPage() {
-  const { currentUser, posts, addPost, isLoading } = useUser();
+  const { currentUser, addPost, isLoading } = useUser();
   const router = useRouter();
   const [newPost, setNewPost] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [dbUser, setDbUser] = useState<any>(null);
+  const [posts, setPosts] = useState<Post[]>([]);
 
+  // Fetch user and posts from database
   useEffect(() => {
-    if (!isLoading && !currentUser) {
-      router.push('/');
+    const fetchData = async () => {
+      try {
+        // Fetch user profile
+        const userResponse = await fetch('/api/profile');
+        if (userResponse.ok) {
+          const userData = await userResponse.json();
+          if (userData.user) {
+            setDbUser(userData.user);
+          }
+        }
+
+        // Fetch posts from database
+        const postsResponse = await fetch('/api/posts');
+        if (postsResponse.ok) {
+          const postsData = await postsResponse.json();
+          setPosts(postsData);
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  // Don't add router as dependency - it causes re-renders
+  useEffect(() => {
+    if (!loading && !dbUser) {
+      router.replace('/');
     }
-  }, [currentUser, isLoading, router]);
+  }, [dbUser, loading]);
 
   const handlePost = async () => {
-    if (!currentUser || !newPost.trim()) return;
+    const user = dbUser || currentUser;
+    if (!user || !newPost.trim()) return;
 
-    const post: Post = {
-      id: Date.now(),
-      userId: currentUser.id,
+    const postData = {
+      userId: user._id || user.id,
       text: newPost,
-      likes: 0,
-      createdAt: new Date(),
     };
 
-    addPost(post);
-    setNewPost('');
-
-    // Log to analytics via API route
     try {
-      await fetch('/api/analytics/post', {
+      // Save to database
+      const response = await fetch('/api/posts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(post)
+        body: JSON.stringify(postData)
       });
+
+      if (response.ok) {
+        const savedPost = await response.json();
+        setPosts([savedPost, ...posts]);
+        setNewPost('');
+        
+        // Also add to local context
+        addPost(savedPost);
+      }
     } catch (error) {
-      console.error('Analytics logging failed:', error);
+      console.error('Error creating post:', error);
     }
   };
 
-  const getUserById = (id: number) => {
-    if (id === currentUser?.id) return currentUser;
-    const user = sampleUsers.find(u => u.id === id);
-    return user ? { ...user, character: assignCharacter(user.style) } : null;
+  const getUserById = (id: any) => {
+    const user = dbUser || currentUser;
+    if (id === user?._id || id === user?.id) return user;
+    const foundUser = sampleUsers.find(u => u.id === id);
+    return foundUser ? { ...foundUser, character: assignCharacter(foundUser.style) } : null;
   };
 
-  if (isLoading || !currentUser) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-pink-100 via-purple-100 to-blue-100 flex items-center justify-center">
-        <div className="text-2xl font-bold bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent">
-          Loading...
-        </div>
-      </div>
-    );
+  if (loading || isLoading) {
+    return <LoadingSpinner message="Loading your feed..." />;
+  }
+
+  const user = dbUser || currentUser;
+  if (!user) {
+    return <LoadingSpinner message="Loading your feed..." />;
   }
 
   return (
@@ -78,7 +115,7 @@ export default function FeedPage() {
         {/* Create Post */}
         <div className="bg-white rounded-2xl shadow-lg p-4 mb-6">
           <div className="flex gap-3">
-            <CharacterAvatar character={currentUser.character} size="sm" />
+            <CharacterAvatar character={user.character} size="sm" />
             <div className="flex-1">
               <textarea
                 value={newPost}
@@ -100,14 +137,29 @@ export default function FeedPage() {
         
         {/* Posts Feed */}
         <div className="space-y-4">
-          {posts.map((post, i) => {
-            const user = getUserById(post.userId);
-            if (!user) return null;
-            
-            return (
-              <PostCard key={post.id || i} post={post} user={user} />
-            );
-          })}
+          {posts.length === 0 ? (
+            <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
+              <div className="text-6xl mb-4">📝</div>
+              <h3 className="text-xl font-bold text-gray-700 mb-2">No posts yet!</h3>
+              <p className="text-gray-500">Be the first to share something with the community.</p>
+            </div>
+          ) : (
+            posts.map((post: any, i) => {
+              // For database posts, user info is already in the post
+              const postUser = post.userName ? {
+                id: post.userId,
+                _id: post.userId,
+                name: post.userName,
+                character: post.userCharacter
+              } : getUserById(post.userId);
+              
+              if (!postUser) return null;
+              
+              return (
+                <PostCard key={post._id || post.id || i} post={post} user={postUser} />
+              );
+            })
+          )}
         </div>
       </div>
       

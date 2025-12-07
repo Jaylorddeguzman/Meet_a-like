@@ -13,6 +13,15 @@ const KeepAlive: React.FC = () => {
       return;
     }
 
+    // Defer initial ping to not block page load - wait 2 minutes after page loads
+    const timeout = setTimeout(async () => {
+      try {
+        await fetch('/api/health');
+      } catch (error) {
+        console.error('Initial keep-alive ping failed:', error);
+      }
+    }, 120000); // 2 minutes
+
     // Ping every 5 minutes (300000ms)
     const interval = setInterval(async () => {
       try {
@@ -23,15 +32,6 @@ const KeepAlive: React.FC = () => {
         console.error('Keep-alive ping failed:', error);
       }
     }, 300000); // 5 minutes
-
-    // Initial ping after 1 minute
-    const timeout = setTimeout(async () => {
-      try {
-        await fetch('/api/health');
-      } catch (error) {
-        console.error('Initial keep-alive ping failed:', error);
-      }
-    }, 60000);
 
     return () => {
       clearInterval(interval);

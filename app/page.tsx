@@ -1,53 +1,38 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { useSession, signIn } from 'next-auth/react';
 import { Heart } from 'lucide-react';
 
 export default function Home() {
   const { data: session, status } = useSession();
-  const router = useRouter();
 
-  useEffect(() => {
-    // Check if user has completed profile setup
-    if (session?.user) {
-      checkProfileStatus();
-    }
-  }, [session]);
-
-  const checkProfileStatus = async () => {
-    try {
-      const response = await fetch('/api/profile');
-      if (response.ok) {
-        const data = await response.json();
-        if (data.user?.profileCompleted) {
-          router.push('/feed');
-        } else {
-          router.push('/profile-setup');
-        }
-      } else {
-        // Profile doesn't exist yet, redirect to setup
-        router.push('/profile-setup');
-      }
-    } catch (error) {
-      console.error('Error checking profile status:', error);
-      router.push('/profile-setup');
-    }
-  };
-
-  if (status === 'loading') {
+  // If authenticated, show a simple redirect message (no automatic redirect)
+  if (session) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-pink-100 via-purple-100 to-blue-100 flex items-center justify-center">
-        <div className="text-2xl font-bold bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent">
-          Loading...
+        <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl p-8 text-center">
+          <Heart className="w-16 h-16 text-pink-500 mx-auto mb-4" fill="currentColor" />
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">Welcome back!</h2>
+          <a 
+            href="/feed"
+            className="inline-block px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white font-bold rounded-xl hover:shadow-lg transition"
+          >
+            Go to Feed
+          </a>
         </div>
       </div>
     );
   }
 
-  if (session) {
-    return null; // Will redirect based on profile status
+  // Show simple loading
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-pink-100 via-purple-100 to-blue-100 flex items-center justify-center">
+        <div className="animate-pulse">
+          <Heart className="w-16 h-16 text-pink-500" fill="currentColor" />
+        </div>
+      </div>
+    );
   }
 
   return (

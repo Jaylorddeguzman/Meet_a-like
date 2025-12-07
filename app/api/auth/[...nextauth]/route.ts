@@ -30,9 +30,10 @@ export const authOptions: NextAuthOptions = {
   pages: {
     signIn: '/',
     newUser: '/profile-setup', // Redirect new users to profile setup
+    error: '/auth/error', // Error page
   },
   secret: process.env.NEXTAUTH_SECRET,
-  debug: process.env.NODE_ENV === 'development',
+  debug: true, // Enable debug logs
   // This ensures the correct URL is used in production
   ...(process.env.NEXTAUTH_URL && { url: process.env.NEXTAUTH_URL }),
 }

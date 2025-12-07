@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useUser } from '@/contexts/UserContext';
 import BottomNav from '@/components/BottomNav';
 import CharacterAvatar from '@/components/CharacterAvatar';
+import LoadingSpinner from '@/components/LoadingSpinner';
 import { X } from 'lucide-react';
 import { sampleUsers } from '@/lib/data';
 import { assignCharacter } from '@/lib/utils';
@@ -20,13 +21,7 @@ export default function MessagesPage() {
   }, [currentUser, isLoading, router]);
 
   if (isLoading || !currentUser) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-pink-100 via-purple-100 to-blue-100 flex items-center justify-center">
-        <div className="text-2xl font-bold bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent">
-          Loading...
-        </div>
-      </div>
-    );
+    return <LoadingSpinner message="Loading messages..." />;
   }
 
   return (

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo } from 'react';
 import { User, Post } from '@/lib/types';
 import { samplePosts } from '@/lib/data';
 
@@ -10,18 +10,22 @@ interface UserContextType {
   posts: Post[];
   addPost: (post: Post) => void;
   isLoading: boolean;
+  showWelcome: boolean;
+  setShowWelcome: (show: boolean) => void;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export function UserProvider({ children }: { children: ReactNode }) {
   const [currentUser, setCurrentUserState] = useState<User | null>(null);
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [posts, setPosts] = useState<Post[]>(samplePosts);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(false);
 
-  // Load user and posts from localStorage on mount
+  // Load user and posts from localStorage on mount - non-blocking
   useEffect(() => {
-    const loadFromStorage = () => {
+    // Run asynchronously without blocking render
+    const loadFromStorage = async () => {
       try {
         const storedUser = localStorage.getItem('currentUser');
         const storedPosts = localStorage.getItem('posts');
@@ -32,15 +36,9 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
         if (storedPosts) {
           setPosts(JSON.parse(storedPosts));
-        } else {
-          // Initialize with sample posts if none stored
-          setPosts(samplePosts);
         }
       } catch (error) {
         console.error('Error loading from localStorage:', error);
-        setPosts(samplePosts);
-      } finally {
-        setIsLoading(false);
       }
     };
 
@@ -64,8 +62,14 @@ export function UserProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('posts', JSON.stringify(newPosts));
   };
 
+  // Memoize context value to prevent unnecessary re-renders
+  const contextValue = useMemo(
+    () => ({ currentUser, setCurrentUser, posts, addPost, isLoading, showWelcome, setShowWelcome }),
+    [currentUser, posts, isLoading, showWelcome]
+  );
+
   return (
-    <UserContext.Provider value={{ currentUser, setCurrentUser, posts, addPost, isLoading }}>
+    <UserContext.Provider value={contextValue}>
       {children}
     </UserContext.Provider>
   );
@@ -78,3 +82,4 @@ export function useUser() {
   }
   return context;
 }
+
