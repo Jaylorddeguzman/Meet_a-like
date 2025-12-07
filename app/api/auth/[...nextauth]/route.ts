@@ -9,6 +9,13 @@ export const authOptions: NextAuthOptions = {
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      authorization: {
+        params: {
+          prompt: "consent",
+          access_type: "offline",
+          response_type: "code"
+        }
+      }
     }),
   ],
   callbacks: {
@@ -25,6 +32,9 @@ export const authOptions: NextAuthOptions = {
     newUser: '/profile-setup', // Redirect new users to profile setup
   },
   secret: process.env.NEXTAUTH_SECRET,
+  debug: process.env.NODE_ENV === 'development',
+  // This ensures the correct URL is used in production
+  ...(process.env.NEXTAUTH_URL && { url: process.env.NEXTAUTH_URL }),
 }
 
 const handler = NextAuth(authOptions)
