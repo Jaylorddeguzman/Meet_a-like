@@ -4,7 +4,6 @@ const nextConfig = {
   reactStrictMode: false, // Disable to prevent double-renders causing flicker
   experimental: {
     instrumentationHook: true, // Enable instrumentation for self-ping
-    optimizeCss: true, // Enable CSS optimization
   },
   onDemandEntries: {
     // Reduce auto-reload frequency

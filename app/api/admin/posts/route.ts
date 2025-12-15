@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
       .limit(50)
       .lean();
 
-    const formattedPosts = posts.map(post => ({
+    const formattedPosts = posts.map((post: any) => ({
       id: post._id.toString(),
       userId: post.userId,
       userName: post.userName,

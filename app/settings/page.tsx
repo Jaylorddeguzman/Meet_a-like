@@ -19,16 +19,20 @@ import {
   Eye,
   EyeOff,
   Trash2,
-  Save
+  Save,
+  Palette,
+  Sparkles
 } from 'lucide-react';
 import BottomNav from '@/components/BottomNav';
+import { useTheme } from '@/contexts/ThemeContext';
 
-type TabType = 'account' | 'privacy' | 'notifications' | 'preferences';
+type TabType = 'account' | 'privacy' | 'notifications' | 'preferences' | 'appearance';
 
 const SettingsPage: React.FC = () => {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<TabType>('account');
+  const { currentTheme, setTheme, themes } = useTheme();
+  const [activeTab, setActiveTab] = useState<TabType>('appearance');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
 
@@ -114,7 +118,13 @@ const SettingsPage: React.FC = () => {
     try {
       const settingsData: any = {};
 
-      if (activeTab === 'account') {
+      if (activeTab === 'appearance') {
+        // Theme is already saved to localStorage, no API call needed
+        setMessage('Theme saved successfully!');
+        setTimeout(() => setMessage(''), 3000);
+        setLoading(false);
+        return;
+      } else if (activeTab === 'account') {
         settingsData.name = name;
         settingsData.bio = bio;
         settingsData.age = parseInt(age);
@@ -192,24 +202,49 @@ const SettingsPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-100 via-purple-100 to-blue-100 pb-20">
+    <div className="min-h-screen pb-20 transition-all duration-500" style={{
+      background: currentTheme.background,
+      backgroundSize: '400% 400%',
+      animation: currentTheme.backgroundAnimation,
+    }}>
       <div className="max-w-4xl mx-auto p-4">
         {/* Header */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 mb-4">
-          <h1 className="text-3xl font-bold text-gray-800">Settings</h1>
-          <p className="text-gray-600 mt-1">Manage your account and preferences</p>
+        <div className="backdrop-blur-xl rounded-2xl shadow-lg p-6 mb-4" style={{
+          background: currentTheme.cardBg,
+          border: `1px solid ${currentTheme.cardBorder}`,
+        }}>
+          <h1 className="text-3xl font-bold" style={{ color: currentTheme.textPrimary }}>Settings</h1>
+          <p className="mt-1" style={{ color: currentTheme.textSecondary }}>Manage your account and preferences</p>
         </div>
 
         {/* Tab Navigation */}
-        <div className="bg-white rounded-2xl shadow-lg mb-4 overflow-x-auto">
-          <div className="flex border-b border-gray-200">
+        <div className="backdrop-blur-xl rounded-2xl shadow-lg mb-4 overflow-x-auto" style={{
+          background: currentTheme.cardBg,
+          border: `1px solid ${currentTheme.cardBorder}`,
+        }}>
+          <div className="flex border-b" style={{ borderColor: currentTheme.cardBorder }}>
+            <button
+              onClick={() => setActiveTab('appearance')}
+              className={`flex-1 py-4 px-6 font-semibold transition-colors whitespace-nowrap ${
+                activeTab === 'appearance' ? 'border-b-2' : ''
+              }`}
+              style={{
+                color: activeTab === 'appearance' ? currentTheme.accentColor : currentTheme.textSecondary,
+                borderColor: activeTab === 'appearance' ? currentTheme.accentColor : 'transparent'
+              }}
+            >
+              <Palette className="inline mr-2" size={20} />
+              Appearance
+            </button>
             <button
               onClick={() => setActiveTab('account')}
               className={`flex-1 py-4 px-6 font-semibold transition-colors whitespace-nowrap ${
-                activeTab === 'account'
-                  ? 'text-purple-600 border-b-2 border-purple-600'
-                  : 'text-gray-500 hover:text-gray-700'
+                activeTab === 'account' ? 'border-b-2' : ''
               }`}
+              style={{
+                color: activeTab === 'account' ? currentTheme.accentColor : currentTheme.textSecondary,
+                borderColor: activeTab === 'account' ? currentTheme.accentColor : 'transparent'
+              }}
             >
               <User className="inline mr-2" size={20} />
               Account
@@ -217,10 +252,12 @@ const SettingsPage: React.FC = () => {
             <button
               onClick={() => setActiveTab('privacy')}
               className={`flex-1 py-4 px-6 font-semibold transition-colors whitespace-nowrap ${
-                activeTab === 'privacy'
-                  ? 'text-purple-600 border-b-2 border-purple-600'
-                  : 'text-gray-500 hover:text-gray-700'
+                activeTab === 'privacy' ? 'border-b-2' : ''
               }`}
+              style={{
+                color: activeTab === 'privacy' ? currentTheme.accentColor : currentTheme.textSecondary,
+                borderColor: activeTab === 'privacy' ? currentTheme.accentColor : 'transparent'
+              }}
             >
               <Shield className="inline mr-2" size={20} />
               Privacy
@@ -228,10 +265,12 @@ const SettingsPage: React.FC = () => {
             <button
               onClick={() => setActiveTab('notifications')}
               className={`flex-1 py-4 px-6 font-semibold transition-colors whitespace-nowrap ${
-                activeTab === 'notifications'
-                  ? 'text-purple-600 border-b-2 border-purple-600'
-                  : 'text-gray-500 hover:text-gray-700'
+                activeTab === 'notifications' ? 'border-b-2' : ''
               }`}
+              style={{
+                color: activeTab === 'notifications' ? currentTheme.accentColor : currentTheme.textSecondary,
+                borderColor: activeTab === 'notifications' ? currentTheme.accentColor : 'transparent'
+              }}
             >
               <Bell className="inline mr-2" size={20} />
               Notifications
@@ -239,10 +278,12 @@ const SettingsPage: React.FC = () => {
             <button
               onClick={() => setActiveTab('preferences')}
               className={`flex-1 py-4 px-6 font-semibold transition-colors whitespace-nowrap ${
-                activeTab === 'preferences'
-                  ? 'text-purple-600 border-b-2 border-purple-600'
-                  : 'text-gray-500 hover:text-gray-700'
+                activeTab === 'preferences' ? 'border-b-2' : ''
               }`}
+              style={{
+                color: activeTab === 'preferences' ? currentTheme.accentColor : currentTheme.textSecondary,
+                borderColor: activeTab === 'preferences' ? currentTheme.accentColor : 'transparent'
+              }}
             >
               <Heart className="inline mr-2" size={20} />
               Preferences
@@ -251,27 +292,98 @@ const SettingsPage: React.FC = () => {
         </div>
 
         {/* Tab Content */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 mb-4">
+        <div className="backdrop-blur-xl rounded-2xl shadow-lg p-6 mb-4" style={{
+          background: currentTheme.cardBg,
+          border: `1px solid ${currentTheme.cardBorder}`,
+        }}>
+          {/* Appearance Tab */}
+          {activeTab === 'appearance' && (
+            <div className="space-y-6">
+              <h2 className="text-2xl font-bold mb-4" style={{ color: currentTheme.textPrimary }}>Choose Your Theme</h2>
+              <p className="mb-6" style={{ color: currentTheme.textSecondary }}>
+                Select a theme to personalize your experience. Each theme has unique colors and animations!
+              </p>
+              
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+                {themes.map((theme) => (
+                  <button
+                    key={theme.id}
+                    onClick={() => setTheme(theme.id)}
+                    className={`relative p-4 rounded-2xl transition-all duration-300 hover:scale-105 active:scale-95 ${
+                      currentTheme.id === theme.id ? 'ring-4' : ''
+                    }`}
+                    style={{
+                      background: theme.background,
+                      backgroundSize: '400% 400%',
+                      animation: theme.backgroundAnimation,
+                      ringColor: currentTheme.id === theme.id ? theme.accentColor : 'transparent',
+                      boxShadow: currentTheme.id === theme.id ? `0 0 30px ${theme.glowColor}` : 'none'
+                    }}
+                  >
+                    {/* Theme Preview */}
+                    <div className="aspect-square mb-2 rounded-xl flex items-center justify-center text-4xl" style={{
+                      background: theme.cardBg,
+                      border: `2px solid ${theme.cardBorder}`
+                    }}>
+                      {theme.emoji}
+                    </div>
+                    <div className="text-center">
+                      <div className="font-bold text-sm mb-1" style={{ color: theme.textPrimary }}>
+                        {theme.name}
+                      </div>
+                      {currentTheme.id === theme.id && (
+                        <div className="text-xs font-semibold" style={{ 
+                          color: theme.accentColor,
+                          textShadow: `0 0 10px ${theme.glowColor}`
+                        }}>
+                          ✓ Active
+                        </div>
+                      )}
+                    </div>
+                  </button>
+                ))}
+              </div>
+
+              <div className="mt-8 p-4 rounded-xl" style={{
+                background: `${currentTheme.accentColor}22`,
+                border: `1px solid ${currentTheme.accentColor}44`
+              }}>
+                <h3 className="font-bold mb-2 flex items-center gap-2" style={{ color: currentTheme.textPrimary }}>
+                  <Sparkles className="w-5 h-5" style={{ color: currentTheme.accentColor }} />
+                  Current Theme: {currentTheme.name}
+                </h3>
+                <p className="text-sm" style={{ color: currentTheme.textSecondary }}>
+                  This theme features animated gradients with {currentTheme.name.toLowerCase()} colors. The background smoothly transitions through different shades, creating a dynamic and engaging experience.
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Account Tab */}
           {activeTab === 'account' && (
             <div className="space-y-6">
-              <h2 className="text-2xl font-bold text-gray-800 mb-4">Account Information</h2>
+              <h2 className="text-2xl font-bold mb-4" style={{ color: currentTheme.textPrimary }}>Account Information</h2>
               
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold mb-2" style={{ color: currentTheme.textPrimary }}>
                   Name
                 </label>
                 <input
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:outline-none"
+                  className="w-full px-4 py-3 border-2 rounded-xl focus:outline-none"
+                  style={{
+                    background: `${currentTheme.cardBg}99`,
+                    borderColor: currentTheme.cardBorder,
+                    color: currentTheme.textPrimary
+                  }}
                   placeholder="Your name"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold mb-2" style={{ color: currentTheme.textPrimary }}>
                   Bio
                 </label>
                 <textarea

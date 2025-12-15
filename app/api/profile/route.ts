@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/app/api/auth/[...nextauth]/route'
+import { authOptions } from '@/lib/auth'
 import clientPromise from '@/lib/mongodb-client'
 
 export async function POST(request: NextRequest) {
@@ -94,8 +94,30 @@ export async function GET(request: NextRequest) {
     const db = client.db('charactermatch')
     const usersCollection = db.collection('users')
 
-    // Get user profile
-    const user = await usersCollection.findOne({ email: session.user.email })
+    // Check if requesting specific user by userId
+    const { searchParams } = new URL(request.url)
+    const userId = searchParams.get('userId')
+
+    let user
+    if (userId) {
+      // Fetch specific user by ID or email
+      const { ObjectId } = require('mongodb')
+      try {
+        // Try to find by MongoDB _id
+        user = await usersCollection.findOne({ _id: new ObjectId(userId) })
+      } catch (e) {
+        // If not a valid ObjectId, try as numeric id or email
+        user = await usersCollection.findOne({ 
+          $or: [
+            { id: parseInt(userId) },
+            { email: userId }
+          ]
+        })
+      }
+    } else {
+      // Get current user's profile
+      user = await usersCollection.findOne({ email: session.user.email })
+    }
 
     if (!user) {
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 })

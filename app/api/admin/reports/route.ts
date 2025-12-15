@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
       .limit(100)
       .lean();
 
-    const formattedReports = reports.map(report => ({
+    const formattedReports = reports.map((report: any) => ({
       id: report._id.toString(),
       reporterId: report.reporterId,
       reporterName: report.reporterName || 'Anonymous',

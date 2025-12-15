@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { UserProvider } from '@/contexts/UserContext';
+import { ThemeProvider } from '@/contexts/ThemeContext';
 import AuthProvider from '@/components/AuthProvider';
 import KeepAlive from '@/components/KeepAlive';
 import './globals.css';
@@ -39,10 +40,12 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <AuthProvider>
-          <UserProvider>
-            <KeepAlive />
-            {children}
-          </UserProvider>
+          <ThemeProvider>
+            <UserProvider>
+              <KeepAlive />
+              {children}
+            </UserProvider>
+          </ThemeProvider>
         </AuthProvider>
       </body>
     </html>
